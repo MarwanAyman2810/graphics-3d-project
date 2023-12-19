@@ -26,6 +26,9 @@ int env1Score = 0;
 int env2Score = 0;
 int healthENV1 = 5;
 int healthENV2 = 5;
+bool flower1 = false;
+bool flower2 = false;
+bool flower3 = false;
 
 bool burger1 = false;
 bool burger2 = false;
@@ -142,12 +145,6 @@ void InitMaterial()
 //=======================================================================
 // OpengGL Configuration Function
 //=======================================================================
-// Call this function when the second environment starts
-void startSecondEnvironment() {
-	isFirstENV = false;
-	startTime = glutGet(GLUT_ELAPSED_TIME) / 1000; // Get current time in seconds
-}
-
 void myInit(void)
 {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -157,22 +154,22 @@ void myInit(void)
 	glLoadIdentity();
 
 	gluPerspective(fovy, aspectRatio, zNear, zFar);
-	//*******************************//
+	//***********//
 	// fovy:			Angle between the bottom and top of the projectors, in degrees.			 //
 	// aspectRatio:		Ratio of width to height of the clipping plane.							 //
 	// zNear and zFar:	Specify the front and back clipping planes distances from camera.		 //
-	//*******************************//
+	//***********//
 
 	glMatrixMode(GL_MODELVIEW);
 
 	glLoadIdentity();
 
 	gluLookAt(Eye.x, Eye.y, Eye.z, At.x, At.y, At.z, Up.x, Up.y, Up.z);
-	//*******************************//
+	//***********//
 	// EYE (ex, ey, ez): defines the location of the camera.									 //
 	// AT (ax, ay, az):	 denotes the direction where the camera is aiming at.					 //
 	// UP (ux, uy, uz):  denotes the upward orientation of the camera.							 //
-	//*******************************//
+	//***********//
 
 	InitLightSource();
 
@@ -181,6 +178,11 @@ void myInit(void)
 	glEnable(GL_DEPTH_TEST);
 
 	glEnable(GL_NORMALIZE);
+}
+
+void startSecondEnvironment() {
+	isFirstENV = false;
+	startTime = glutGet(GLUT_ELAPSED_TIME) / 1000; // Get current time in seconds
 }
 
 //=======================================================================
@@ -429,25 +431,32 @@ void drawEnv1() {
 
 
 	// Flower1
-	glPushMatrix();
-	glTranslatef(-5, 0, 5);
-	glScalef(0.004, 0.004, 0.004);
-	modelFlower.Draw();
-	glPopMatrix();
+	if (!flower1) {
+		glPushMatrix();
+		glTranslatef(-5, 0, 5);
+		glScalef(0.004, 0.004, 0.004);
+		modelFlower.Draw();
+		glPopMatrix();
+	}
+
 
 	// Flower2
-	glPushMatrix();
-	glTranslatef(-11, 0, 10);
-	glScalef(0.004, 0.004, 0.004);
-	modelFlower.Draw();
-	glPopMatrix();
+	if (!flower2) {
+		glPushMatrix();
+		glTranslatef(-11, 0, 10);
+		glScalef(0.004, 0.004, 0.004);
+		modelFlower.Draw();
+		glPopMatrix();
+	}
 
-	// Flower2
-	glPushMatrix();
-	glTranslatef(4, 0, -5);
-	glScalef(0.004, 0.004, 0.004);
-	modelFlower.Draw();
-	glPopMatrix();
+	// Flower3
+	if (!flower3) {
+		glPushMatrix();
+		glTranslatef(4, 0, -5);
+		glScalef(0.004, 0.004, 0.004);
+		modelFlower.Draw();
+		glPopMatrix();
+	}
 
 
 	// spike1
@@ -504,7 +513,32 @@ void drawEnv1() {
 
 
 }
+void checkCollisionsflower() {
+	//const float tolerance = 0.01f;
 
+
+
+	if ((!flower1) && playerPosition.x == -15 && playerPosition.z == -2) {
+		flower1 = true;
+		std::cout << "Flower1 collected" << std::endl;
+		std::cout << "flower1 position {x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
+		//updateVibration();
+	}
+	if ((!flower2) && playerPosition.x == -21 && playerPosition.z == 3) {
+		flower2 = true;
+		std::cout << "Flower2 collected" << std::endl;
+		std::cout << "flower2 position{x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
+		//updateVibration();
+	}
+	if ((!flower3) && playerPosition.x == -6 && playerPosition.z == -12) {
+		flower3 = true;
+		std::cout << "Flower3 collected" << std::endl;
+		std::cout << "flower3 position{x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
+		//updateVibration();
+	}
+
+
+}
 
 void drawEnv2() {
 
@@ -789,85 +823,7 @@ void updateAndDisplayScoreAndTime() {
 	print(10, HEIGHT - 30, 0, scoreString);
 	print(10, HEIGHT - 60, 0, timeString);
 }
-//=======================================================================
-// Display Function
-//=======================================================================
-void myDisplay(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-	GLfloat lightIntensity[] = { 0.7, 0.7, 0.7, 1.0f };
-	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
-	//updateCamera();
-	// Set up the view matrix for a third-person perspective
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	if (!isFirstPersonView) {
-		// Define the camera's position relative to the player
-		const float distanceBehindPlayer = 10.0f; // Adjust this distance as needed
-		const float heightAbovePlayer = 5.0f;     // Adjust the height as needed
-
-		// Calculate the camera position behind the player
-		float camera_x = playerPosition.x + distanceBehindPlayer * cos(playerRotation.y * M_PI / 180.0);
-		float camera_y = playerPosition.y + heightAbovePlayer;
-		float camera_z = playerPosition.z + distanceBehindPlayer * sin(playerRotation.y * M_PI / 180.0);
-
-		// Define the point the camera is looking at (the player's position)
-		float lookAt_x = playerPosition.x;
-		float lookAt_y = playerPosition.y + 1.5f; // Adjust the height to focus on the player's center
-		float lookAt_z = playerPosition.z;
-
-		// Set up the camera view
-		gluLookAt(camera_x, camera_y, camera_z, lookAt_x, lookAt_y, lookAt_z, 0, 1, 0);
-	}
-	else {
-		// Define the camera's position relative to the player
-		const float distanceBehindPlayer = 1.0f; // Adjust this distance as needed
-		const float heightAbovePlayer = 3.0f;    // Adjust the height as needed
-
-		// Calculate the camera position behind the player
-		float camera_x = playerPosition.x;
-		float camera_y = playerPosition.y + heightAbovePlayer;
-		float camera_z = playerPosition.z;
-
-		// Set up the camera view to look forward from the player's position
-		float lookAt_x = playerPosition.x - cos(playerRotation.y * M_PI / 180.0); // Looking in the direction the player is facing
-		float lookAt_y = playerPosition.y + 2.7; // Adjust the height to focus on the player's center
-		float lookAt_z = playerPosition.z - sin(playerRotation.y * M_PI / 180.0); // Looking in the direction the player is facing
-
-		// Set up the camera view
-		gluLookAt(camera_x, camera_y, camera_z, lookAt_x, lookAt_y, lookAt_z, 0, 1, 0);
-	}
-
-
-	updateAndDisplayScoreAndTime();
-	updateGame();
-	checkCollisions();
-
-	drawEnv1();
-
-
-	GLUquadricObj* qobj;
-	qobj = gluNewQuadric();
-	glTranslated(50, 0, 0);
-	glRotated(90, 1, 0, 1);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	gluQuadricTexture(qobj, true);
-	gluQuadricNormals(qobj, GL_SMOOTH);
-	gluSphere(qobj, 100, 100, 100);
-	gluDeleteQuadric(qobj);
-
-
-	glPopMatrix();
-
-
-
-	glutSwapBuffers();
-}
 
 
 
@@ -878,32 +834,32 @@ void myDisplay(void)
 //=======================================================================
 // Motion Function
 //=======================================================================
-void myMotion(int x, int y)
-{
-	y = HEIGHT - y;
-
-	if (cameraZoom - y > 0)
-	{
-		Eye.x += -0.1;
-		Eye.z += -0.1;
-	}
-	else
-	{
-		Eye.x += 0.1;
-		Eye.z += 0.1;
-	}
-
-	cameraZoom = y;
-
-	glLoadIdentity();	//Clear Model_View Matrix
-
-	gluLookAt(Eye.x, Eye.y, Eye.z, At.x, At.y, At.z, Up.x, Up.y, Up.z);	//Setup Camera with modified paramters
-
-	GLfloat light_position[] = { 0.0f, 10.0f, 0.0f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-	glutPostRedisplay();	//Re-draw scene 
-}
+//void myMotion(int x, int y)
+//{
+//	y = HEIGHT - y;
+//
+//	if (cameraZoom - y > 0)
+//	{
+//		Eye.x += -0.1;
+//		Eye.z += -0.1;
+//	}
+//	else
+//	{
+//		Eye.x += 0.1;
+//		Eye.z += 0.1;
+//	}
+//
+//	cameraZoom = y;
+//
+//	glLoadIdentity();	//Clear Model_View Matrix
+//
+//	gluLookAt(Eye.x, Eye.y, Eye.z, At.x, At.y, At.z, Up.x, Up.y, Up.z);	//Setup Camera with modified paramters
+//
+//	GLfloat light_position[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+//	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+//
+//	glutPostRedisplay();	//Re-draw scene 
+//}
 
 
 
@@ -911,7 +867,6 @@ void myMotion(int x, int y)
 //=======================================================================
 // Mouse Function
 //=======================================================================
-
 
 //=======================================================================
 // Reshape Function
@@ -939,6 +894,7 @@ void myReshape(int w, int h)
 	gluLookAt(Eye.x, Eye.y, Eye.z, At.x, At.y, At.z, Up.x, Up.y, Up.z);
 }
 
+
 //=======================================================================
 // Assets Loading Function
 //=======================================================================
@@ -965,78 +921,81 @@ void LoadAssets()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 void Keyboard(unsigned char key, int x, int y) {
-	float d = 0.01;
-	float a = 4.0;
-	float speed = 0.5f;
+	float speed = 1.0f;
 
 	switch (key) {
 	case 'w':
 		playerRotation.y = 180.0;
-
 		if (playerPosition.z >= -23) {
 			playerPosition.z -= speed;
-
 		}
-
-		std::cout << "The position now {x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
-
 		break;
 	case 's':
-		// Move the player backward in the opposite direction they are facing
-		//player.position.x -= d * sin(player.rotationY);
-
+		playerRotation.y = 0.0;
 		if (playerPosition.z <= 11) {
 			playerPosition.z += speed;
-
 		}
-
-		playerRotation.y = 0.0;
-		std::cout << "The position now {x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
-
-
 		break;
 	case 'a':
+		playerRotation.y = -90.0;
 		if (playerPosition.x >= -25) {
 			playerPosition.x -= speed;
-
 		}
-		playerRotation.y = -90.0;
-		std::cout << "The position now {x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
-
-
-
 		break;
 	case 'd':
-
+		playerRotation.y = 90.0;
 		if (playerPosition.x < 9) {
 			playerPosition.x += speed;
-
 		}
-		std::cout << "The position now {x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
-
-
-		playerRotation.y = 90.0;
-
 		break;
-	case 'm':
-		switchCameraView();
-		break;
-	case '27':
+	case 27: // ASCII value for the escape key
 		exit(EXIT_SUCCESS);
 	}
 
+	// Redraw the screen or update the display here
+	glutPostRedisplay();
+
+	std::cout << "The position now {x: " << playerPosition.x << ", y: " << playerPosition.y << ", z: " << playerPosition.z << "}" << std::endl;
+}
+//=======================================================================
+// Display Function
+//=======================================================================
+void myDisplay(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
+	GLfloat lightIntensity[] = { 0.7, 0.7, 0.7, 1.0f };
+	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
+
+
+
+	/*updateAndDisplayScoreAndTime();
+	updateGame();*/
+	checkCollisions();
+
+	drawEnv1();
+
+	GLUquadricObj* qobj;
+	qobj = gluNewQuadric();
+	glTranslated(50, 0, 0);
+	glRotated(90, 1, 0, 1);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	gluQuadricTexture(qobj, true);
+	gluQuadricNormals(qobj, GL_SMOOTH);
+	gluSphere(qobj, 100, 100, 100);
+	gluDeleteQuadric(qobj);
+
+
+	glPopMatrix();
+	checkCollisionsflower();
+
+
+	glutSwapBuffers();
 }
 
 //=======================================================================
@@ -1058,7 +1017,7 @@ void main(int argc, char** argv)
 
 	glutKeyboardFunc(Keyboard);
 
-	glutMotionFunc(myMotion);
+	//	glutMotionFunc(myMotion);
 
 	//glutMouseFunc(myMouse);
 
